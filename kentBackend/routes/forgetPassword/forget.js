@@ -32,31 +32,24 @@ router.post('/', function (req, res, next) {
                     const token = jwt.sign(payload, secret, { expiresIn: '15m' })
                     const link = `${process.env.CLIENT_URL}/forgetPassword/${resp[0].id}/${token}`
                     //send link to email
-                    var transporter = nodemailer.createTransport({
-                        host: "smtp.mailtrap.io",
-                        port: 2525,
-                        auth: {
-                          user: "023f3388d36cfb",
-                          pass: "d86cd9e053fc30"
-                        }
-                      });
-                      var mailOptions = {
-                        from: '"Kent Water" <kentwater.sales@gmail.com>',
-                        to: email,
+                    const sgMail = require('@sendgrid/mail')
+                    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+                    const msg = {
+                        to: email, // Change to your recipient
+                        from: 'info@kentwater.ca', // Change to your verified sender
                         subject: 'Reset Password Kent Water',
                         html: `<p>Password Reset link valid for 15 Minutes<br/><a href="${link}">Click here for Genrate New Password</a></p>`,
-                      };
-                      transporter.sendMail(mailOptions, function(error, info){
-                        if (error) {
-                            res.send({ status: 200, success, error: error })
-                        } else {
+                      }
+                      sgMail
+                        .send(msg)
+                        .then(() => {
                             success = true;
                             res.send({ status: 200, success, response: "Password Reset link has been send to your Email ID" })
-                        }
-                      });
-                    // console.log(link)
-                    // success = true;
-                    // res.send({ status: 200, success, response: "Password Reset link has been send to your Email ID" })
+                        })
+                        .catch((error) => {
+                            res.send({ status: 200, success, error: error })
+                        })
+
 
                 } else {
                     //user not fond
